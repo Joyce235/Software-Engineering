@@ -1,0 +1,173 @@
+package edu.vt.cs5044;
+
+import static edu.vt.cs5044.DABGuiName.*;
+
+import java.awt.Component;
+import java.awt.Container;
+import java.awt.Frame;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
+import java.util.stream.IntStream;
+import javax.swing.JButton;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.SwingUtilities;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+@SuppressWarnings("javadoc")
+public class DABPanelTest {
+
+    private JFrame dummyFrame;
+    private DABPanel dabPanel;
+    private DABGrid dabGrid;
+
+    private JComboBox<Integer> xCombo;
+    private JComboBox<Integer> yCombo;
+    private JComboBox<Direction> dirCombo;
+
+    private JLabel p1ScoreLabel;
+    private JLabel p2ScoreLabel;
+    private JLabel turnLabel;
+
+    private JButton drawButton;
+
+    private JMenuItem init2MenuItem;
+    private JMenuItem init3MenuItem;
+    private JMenuItem init4MenuItem;
+    private JMenuItem interactiveMenuItem;
+
+    private void SwingInvokeAndWait(Runnable r) {
+        try {
+            SwingUtilities.invokeAndWait(r);
+        } catch (InterruptedException | InvocationTargetException e) {
+            throw new RuntimeException(e.getCause());
+        }
+    }
+
+    private void checkScores(int expectP1, int expectP2) {
+        assertTrue(p1ScoreLabel.getText().matches("[^\\d]*" + expectP1 + "[^\\d]*"));
+        assertTrue(p2ScoreLabel.getText().matches("[^\\d]*" + expectP2 + "[^\\d]*"));
+    }
+
+    private void checkTurn(Player expectPlayer) {
+        String turnString = turnLabel.getText();
+        assertTrue(turnString.contains(expectPlayer.toString()));
+        assertFalse(turnString.contains(expectPlayer.getOpponent().toString()));
+    }
+
+    private void drawEdge(int x, int y, Direction dir) {
+        SwingInvokeAndWait(() -> {
+            xCombo.setSelectedItem(x);
+            yCombo.setSelectedItem(y);
+            dirCombo.setSelectedItem(dir);
+            drawButton.doClick();
+        });
+    }
+
+    private void clickMenuItem(JMenuItem item) {
+        SwingInvokeAndWait(item::doClick);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Component> T findComponent(Container root, String name) {
+        synchronized(root.getTreeLock()) {
+            for (Component child : root.getComponents()) {
+                if (name.equals(child.getName())) {
+                    return (T) child;
+                }
+                if (child instanceof Container) {
+                    T subChild = findComponent((Container) child, name);
+                    if (subChild != null) {
+                        return subChild;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    @Before
+    public void setUp() {
+        dummyFrame = new JFrame();
+        dabPanel = new DABPanel(dummyFrame);
+        dummyFrame.setContentPane(dabPanel);
+
+        xCombo = findComponent(dabPanel, X_COMBO);
+        yCombo = findComponent(dabPanel, Y_COMBO);
+        dirCombo = findComponent(dabPanel, DIR_COMBO);
+        drawButton = findComponent(dabPanel, DRAW_BUTTON);
+
+        p1ScoreLabel = findComponent(dabPanel, P1_SCORE_LABEL);
+        p2ScoreLabel = findComponent(dabPanel, P2_SCORE_LABEL);
+        turnLabel = findComponent(dabPanel, TURN_LABEL);
+
+        dabGrid = findComponent(dabPanel, DAB_GRID);
+    }
+
+    @After
+    public void tearDown() {
+        if (dummyFrame != null) {
+            dummyFrame.dispose();
+        }
+    }
+
+    @Test
+    public void testFoundAllComponents() {
+        assertNotNull(xCombo);
+        assertNotNull(yCombo);
+        assertNotNull(dirCombo);
+        assertNotNull(p1ScoreLabel);
+        assertNotNull(p2ScoreLabel);
+        assertNotNull(turnLabel);
+        assertNotNull(drawButton);
+        assertNotNull(dabGrid);
+    }
+
+    @Test
+    public void testInitialCombos() {
+        assertEquals(3, xCombo.getItemCount());
+        assertEquals(3, yCombo.getItemCount());
+
+        IntStream.range(0, 3).forEach(i -> {
+            assertEquals(i, (int) xCombo.getItemAt(i));
+            assertEquals(i, (int) yCombo.getItemAt(i));
+        });
+
+        assertEquals(4, dirCombo.getItemCount());
+
+        Arrays.stream(Direction.values())
+            .forEach(dir -> assertEquals(dir, dirCombo.getItemAt(dir.ordinal())));
+    }
+
+    @Test
+    public void testInitialLabels() {
+        assertTrue(p1ScoreLabel.getText().contains("ONE"));
+        assertTrue(p2ScoreLabel.getText().contains("TWO"));
+
+        checkScores(0, 0);
+        checkTurn(Player.ONE);
+    }
+
+    @Test
+    public void testInitialDrawEnabled() {
+        assertTrue(drawButton.isEnabled());
+    }
+
+    // More tests...
+
+    @Test
+    public void testCallMain() {
+        DABPanel.main(new String[0]);
+        SwingUtilities.invokeLater(() -> {
+            Arrays.stream(Frame.getFrames()).forEach(Frame::dispose);
+        });
+    }
+}

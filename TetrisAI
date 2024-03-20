@@ -1,0 +1,125 @@
+package edu.vt.cs5044;
+
+import edu.vt.cs5044.tetris.AI;
+import edu.vt.cs5044.tetris.Board;
+import edu.vt.cs5044.tetris.Placement;
+import edu.vt.cs5044.tetris.Rotation;
+import edu.vt.cs5044.tetris.Shape;
+
+/**
+ * This class implements the AI and creates suitable moves in Tetris.
+ * 
+ * @author joycebanks17
+ * @version 03/07/2022
+ */
+public class TetrisAI implements AI {
+
+    @Override
+    public Placement findBestPlacement(Board currentBoard, Shape shape) {
+        int overallCost = Integer.MAX_VALUE;
+        int tempCost = 0;
+        Placement tempPlacement;
+        Placement bestPlacement = new Placement(Rotation.NONE, 0);
+        
+        for (int col = 0; col < currentBoard.WIDTH; col++) {
+            for (Rotation rotation : shape.getValidRotationSet()) {
+                int availableWidth = currentBoard.WIDTH - col;
+                
+                if (shape.getWidth(rotation) <= availableWidth) {
+                    tempPlacement = new Placement(rotation, col);
+                    Board tempBoard = currentBoard.getResultBoard(shape, tempPlacement);
+                    
+                    tempCost = 6 * getAverageColumnHeight(tempBoard)
+                             + 3 * getColumnHeightRange(tempBoard)
+                             + 0 * getColumnHeightVariance(tempBoard)
+                             + 9 * getTotalGapCount(tempBoard);
+                    
+                    if (tempCost < overallCost) {
+                        overallCost = tempCost;
+                        bestPlacement = tempPlacement;
+                    }
+                }
+            }
+        }
+        return bestPlacement;
+    }
+
+    @Override
+    public int getAverageColumnHeight(Board board) {
+        int heightSum = 0;
+        
+        for (int col = 0; col < board.WIDTH; col++) {
+            heightSum += getColumnHeight(board, col);
+        }
+        return heightSum / board.WIDTH;
+    }
+
+    @Override
+    public int getColumnHeightRange(Board board) {
+        int tallestHeight = Integer.MIN_VALUE;
+        int shortestHeight = Integer.MAX_VALUE;
+        
+        for (int col = 0; col < board.WIDTH; col++) {
+            tallestHeight = Math.max(tallestHeight, getColumnHeight(board, col));
+            shortestHeight = Math.min(shortestHeight, getColumnHeight(board, col));
+        }
+        return tallestHeight - shortestHeight;
+    }
+
+    @Override
+    public int getColumnHeightVariance(Board board) {
+        int heightVariance = 0;
+        
+        for (int col = 0; col < board.WIDTH - 1; col++) {
+            int currentColHeight = getColumnHeight(board, col);
+            int nextColHeight = getColumnHeight(board, col + 1);
+            heightVariance += Math.abs(currentColHeight - nextColHeight);
+        }
+        return heightVariance;
+    }
+
+    @Override
+    public int getTotalGapCount(Board board) {
+        int totalGaps = 0;
+        
+        for (int col = 0; col < board.WIDTH; col++) {
+            totalGaps += getColumnHeight(board, col) - getColumnBlockCount(board, col);
+        }
+        return totalGaps;
+    }
+
+    /**
+     * Gets the height of the current column.
+     * 
+     * @param board the actual Tetris board
+     * @param col   Indicates the position of the column to get
+     * @return The height of the column
+     */
+    private int getColumnHeight(Board board, int col) {
+        boolean[] colValues = board.getFixedBlocks()[col];
+        for (int row = board.HEIGHT - 1; row >= 0; row--) {
+            if (colValues[row]) {
+                return row + 1;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Gets the block count of the current column.
+     * 
+     * @param board the actual Tetris board
+     * @param col   Indicates the position of the column to get
+     * @return The block count of the current column
+     */
+    private int getColumnBlockCount(Board board, int col) {
+        int blockCount = 0;
+        boolean[] colVals = board.getFixedBlocks()[col];
+        for (int row = 0; row < board.HEIGHT; row++) {
+            if (colVals[row]) {
+                blockCount++;
+            }
+        }
+        return blockCount;
+    }
+}

@@ -1,0 +1,242 @@
+package edu.vt.cs5044;
+
+// Template for Spring 2022
+
+/**
+ * This class is used to represent the operation of the door of a minivan.
+ * 
+ * @author Joyce Bozeko
+ * @version 02-14-2022
+ */
+public class MinivanSlidingDoor {
+
+    /**
+     * Data members gear = it shows the gear of the car door = it shows whether a
+     * door is opened or closed childSafe = it shows if child lock is engaged or
+     * disengaged lock = it shows if door is locked or unlocked
+     */
+    private Gear gear;
+    private Direction door;
+    private Direction childSafe;
+    private Direction lock;
+
+    /**
+     * This constructor is used to assign default values to data variables.
+     */
+    public MinivanSlidingDoor() {
+        door = Direction.CLOSE;
+        lock = Direction.OPEN;
+        gear = Gear.PARK;
+        childSafe = Direction.CLOSE;
+    }
+
+    /**
+     * This function returns if the door is open or closed.
+     * 
+     * @return true if door is open, else false
+     */
+    public boolean isOpen() {
+        return door == Direction.OPEN;
+    }
+
+    /**
+     * This function returns if the door is locked or not.
+     * 
+     * @return true if door lock is closed, else false
+     */
+    public boolean isLocked() {
+        return lock == Direction.CLOSE;
+    }
+
+    /**
+     * This function returns if the child lock is engaged or not.
+     * 
+     * @return true if child lock is engaged, else false
+     */
+    public boolean isChildSafe() {
+        return childSafe == Direction.OPEN;
+    }
+
+    /**
+     * This function returns the gear of the car.
+     * 
+     * @return gear
+     */
+    public Gear getGear() {
+        return gear;
+    }
+
+    /**
+     * This function returns if the door is locked or not.
+     * 
+     * @param requestedGear the new gear for the car
+     * @return true if door lock is open, else false
+     */
+    public Result setGear(Gear requestedGear) {
+        if (gear == requestedGear) {
+            return Result.NO_ACTION;
+        }
+
+        if (requestedGear == Gear.PARK) {
+            gear = requestedGear;
+            return Result.GEAR_PARKED;
+        }
+
+        if (requestedGear == Gear.REVERSE || requestedGear == Gear.NEUTRAL || requestedGear == Gear.DRIVE) {
+            if (gear == Gear.PARK) {
+                gear = requestedGear;
+                return Result.GEAR_RELEASED;
+            }
+            gear = requestedGear;
+            return Result.GEAR_CHANGED;
+        }
+
+        return Result.INVALID_PARAMETER;
+    }
+
+    /**
+     * This function returns if the child lock is engaged or not.
+     * 
+     * @param requestedEngage true if child lock is engaged, else false
+     * @return true if child lock is engaged, else false
+     */
+    public Result setChildSafe(boolean requestedEngage) {
+        if (door == Direction.OPEN) {
+            if (requestedEngage && childSafe == Direction.CLOSE) {
+                childSafe = Direction.OPEN;
+                return Result.CHILDSAFE_ENGAGED;
+            } else if (!requestedEngage && childSafe == Direction.OPEN) {
+                childSafe = Direction.CLOSE;
+                return Result.CHILDSAFE_DISENGAGED;
+            } else {
+                return Result.NO_ACTION;
+            }
+        }
+        return Result.CHILDSAFE_INACCESSIBLE;
+    }
+
+    /**
+     * This function is used to lock the door.
+     * 
+     * @return Door locked if door lock is open, else no action
+     */
+    public Result pushLockButton() {
+        if (lock == Direction.OPEN) {
+            lock = Direction.CLOSE;
+            return Result.DOOR_LOCKED;
+        }
+        return Result.NO_ACTION;
+    }
+
+    /**
+     * This function is used to unlock the door.
+     * 
+     * @return Door unlocked if door lock is closed, else no action
+     */
+    public Result pushUnlockButton() {
+        if (lock == Direction.CLOSE) {
+            lock = Direction.OPEN;
+            return Result.DOOR_UNLOCKED;
+        }
+        return Result.NO_ACTION;
+    }
+
+    /**
+     * This function is used to unlock the door using the dashboard button.
+     * 
+     * @param direction of the lock
+     * @return Door operation performed
+     */
+    public Result pushDashboardButton(Direction direction) {
+        if (direction == null) {
+            return Result.INVALID_PARAMETER;
+        }
+
+        if (direction == Direction.OPEN) {
+            if (gear != Gear.PARK) {
+                return Result.OPEN_REFUSED_GEAR;
+            }
+            if (lock == Direction.CLOSE) {
+                return Result.OPEN_REFUSED_LOCK;
+            }
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.OPEN;
+            return Result.DOOR_OPENED;
+        } else {
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.CLOSE;
+            return Result.DOOR_CLOSED;
+        }
+    }
+
+    /**
+     * This function is used to unlock the door using the inside button.
+     * 
+     * @param direction of the handle
+     * @return operation performed
+     */
+    public Result pushInsideHandle(Direction direction) {
+        if (direction == null) {
+            return Result.INVALID_PARAMETER;
+        }
+
+        if (direction == Direction.OPEN) {
+            if (isChildSafe()) {
+                return Result.OPEN_REFUSED_CHILDSAFE;
+            }
+            if (gear != Gear.PARK) {
+                return Result.OPEN_REFUSED_GEAR;
+            }
+            if (lock == Direction.CLOSE) {
+                return Result.OPEN_REFUSED_LOCK;
+            }
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.OPEN;
+            return Result.DOOR_OPENED;
+        } else {
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.CLOSE;
+            return Result.DOOR_CLOSED;
+        }
+    }
+
+    /**
+     * This function is used to open the door from the outside handle.
+     * 
+     * @param direction of the lock (open or close)
+     * @return Door operation performed
+     */
+    public Result pushOutsideHandle(Direction direction) {
+        if (direction == null) {
+            return Result.INVALID_PARAMETER;
+        }
+
+        if (direction == Direction.OPEN) {
+            if (gear != Gear.PARK) {
+                return Result.OPEN_REFUSED_GEAR;
+            }
+            if (lock == Direction.CLOSE) {
+                return Result.OPEN_REFUSED_LOCK;
+            }
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.OPEN;
+            return Result.DOOR_OPENED;
+        } else {
+            if (door == direction) {
+                return Result.NO_ACTION;
+            }
+            door = Direction.CLOSE;
+            return Result.DOOR_CLOSED;
+        }
+    }
+}

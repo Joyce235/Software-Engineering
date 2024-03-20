@@ -1,0 +1,34 @@
+package edu.vt.cs5044;
+  	
+ public class MinivanSlidingDoorTester {
+
+     public static void main(String[] args) {
+         MinivanSlidingDoor obj = new MinivanSlidingDoor();
+         System.out.println(obj.getGear());
+         System.out.println(obj.isChildSafe());
+         System.out.println(obj.isLocked());
+         System.out.println(obj.isOpen());
+         System.out.println(obj.setChildSafe(true));
+         System.out.println(obj.setChildSafe(false));
+         System.out.println(obj.pushLockButton());
+         System.out.println(obj.pushUnlockButton());
+         System.out.println(obj.pushLockButton());
+         System.out.println(obj.pushInsideHandle(Direction.OPEN));
+         System.out.println(obj.pushUnlockButton());
+         System.out.println(obj.setGear(Gear.DRIVE));
+         System.out.println(obj.pushInsideHandle(Direction.OPEN));
+
+         MinivanSlidingDoor obj1 = new MinivanSlidingDoor();
+     System.out.println("Locked: "+obj1.isLocked());
+     System.out.println("Door: "+obj1.isOpen());
+     System.out.println("Child Safe: "+obj1.isChildSafe());
+     System.out.println("Gear: "+obj1.getGear());
+     System.out.println(obj1.pushOutsideHandle(Direction.OPEN));
+     System.out.println(obj1.setChildSafe(true));
+     System.out.println(obj1.pushOutsideHandle(Direction.CLOSE));
+     System.out.println(obj1.setGear(Gear.DRIVE));
+     System.out.println(obj1.pushInsideHandle(Direction.OPEN));
+         
+     }
+	
+ }
